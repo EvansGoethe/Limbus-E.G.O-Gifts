@@ -1,0 +1,16 @@
+package me.yisang.limbusegogift.gifts;
+import me.yisang.limbusegogift.BaseAccessory;
+import me.yisang.limbusegogift.LimbusEGOGift;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+public class BlueZippoLighter extends BaseAccessory {
+    public BlueZippoLighter(LimbusEGOGift plugin) {
+        super(plugin, "blue_zippo_lighter", "藍色Zippo打火機", "&7攻擊時：30% 機率點燃目標 3 秒");
+    }
+    @Override public void onAttack(EntityDamageByEntityEvent event, Player attacker) {
+        if (Math.random() < 0.30 && event.getEntity() instanceof LivingEntity target) {
+            target.setFireTicks(60);
+        }
+    }
+}

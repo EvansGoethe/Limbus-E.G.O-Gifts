@@ -1,0 +1,13 @@
+name: LimbusEGOGift
+version: 1.0
+main: me.yisang.limbusegogift.LimbusEGOGift
+description: Limbus Company E.G.O Gift accessory system
+api-version: "1.21.4"
+commands:
+  accessories:
+    description: 開啟飾品欄位
+    usage: /accessories
+  getgift:
+    description: 取得飾品
+    usage: /getgift <id>
+    permission: limbus.admin
