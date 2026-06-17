@@ -9,5 +9,9 @@ commands:
     usage: /accessories
   getgift:
     description: 取得飾品
-    usage: /getgift <id>
+    usage: /getgift <id> [amount]
+    permission: limbus.admin
+  gachachest:
+    description: 設定或移除抽取箱
+    usage: /gachachest <set|remove>
     permission: limbus.admin

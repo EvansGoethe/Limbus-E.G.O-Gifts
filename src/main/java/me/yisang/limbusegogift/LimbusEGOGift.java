@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
@@ -17,6 +18,7 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,7 +31,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     private static final String PACK_URL  = "https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack/releases/download/releases/Limbus_E.G.O._Gifts_plugin_ResourcePack.v.10.zip";
-    private static final String PACK_HASH = "f0c13d17d8681cca89521f2679da2a321592a189";
+    private static final String PACK_HASH = "35b68648a8b1f1aef3c614b615f5e1bb8733e6ff";
     private static final java.util.UUID PACK_UUID = java.util.UUID.nameUUIDFromBytes(
             PACK_URL.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
@@ -45,20 +47,88 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     private NamespacedKey ITEM_ID_KEY;
     private NamespacedKey MENU_OPENER_KEY;
     private NamespacedKey[] SLOT_KEYS;
+    private NamespacedKey UPGRADE_KEY_PREFIX;
 
     private final Map<String, Accessory> accessories = new LinkedHashMap<>();
     private final Map<UUID, AccessoryMenu> openMenus = new HashMap<>();
     private final Map<UUID, GiftAdminGUI> openAdminMenus = new HashMap<>();
 
+    private GachaChestManager gachaChestManager;
+    private GachaListener gachaListener;
+
+    // ── 階級表 ──────────────────────────────────────────────────────────────
+
+    private static final Map<String, Integer> TIER_MAP = new HashMap<>();
+    private static final Set<String> VESTIGE_IDS = new HashSet<>();
+
+    static {
+        // ─ Tier I ─
+        for (String id : new String[]{
+            "broken_compass", "dry_to_the_bone_breast", "hardship",
+            "homeward", "piece_of_a_torn_summer", "sour_liquor_aroma",
+            // 新飾品
+            "nixie_divergence", "prejudice", "bloody_gadget"
+        }) TIER_MAP.put(id, 1);
+
+        // ─ Tier II ─
+        for (String id : new String[]{
+            "ardent_flower", "ashes_to_ashes", "black_sheet_music",
+            "blue_zippo_lighter", "cask_spirits", "cold_illusion",
+            "cqc_manual", "crystallized_blood", "ebony_brooch",
+            "flower_mound", "frozen_cries", "harestride",
+            "pain_of_stifled_rage", "plume_of_proof", "rest",
+            "trial_plan_guide",
+            // 新飾品
+            "carmilla", "child_within_a_flask", "green_spirit",
+            "sanguine_blossom_bolus", "late_bloomers_tattoo",
+            "e_type_dimensional_dagger", "bloodflame_sword"
+        }) TIER_MAP.put(id, 2);
+
+        // ─ Tier III ─
+        for (String id : new String[]{
+            "chief_butlers_secret_arts", "clear_mirror_calm_water",
+            "dreaming_electric_sheep", "dueling_manual_book_3",
+            "dust_to_dust", "finifugality", "golden_urn",
+            "hot_n_juicy_drumstick", "jin_gang_bolus", "keenbranch",
+            "la_manchaland_all_day_pass", "la_manchaland_standard_pass",
+            "lithograph", "mask_of_the_parade", "mental_corruption_boosting_gas",
+            "moon_in_the_water", "phantom_pain", "smoking_gunpowder",
+            "strange_glyph_talisman",
+            // 新飾品
+            "nebulizer", "strange_glyph_inscriptions", "rusty_commemorative_coin",
+            "someones_device", "special_contract", "flower_in_the_mirror",
+            "sunshower", "thunderbranch"
+        }) TIER_MAP.put(id, 3);
+
+        // ─ Tier IV ─
+        for (String id : new String[]{
+            "distant_star", "emerald_elytra", "illusory_hunt",
+            "oracle", "piece_of_crumbled_egg", "piece_of_relationship",
+            "rags", "ruin", "spicebush_branch", "tangled_bones",
+            "tenacity_bolus", "the_book_of_vengeance", "tranquil_lotus_bolus",
+            "trauma_shield",
+            // 新飾品
+            "endless_hunger", "royal_jelly_perfume", "millarca",
+            "artistic_sense", "handheld_mirror", "glimpse_of_flames", "sownpour"
+        }) TIER_MAP.put(id, 4);
+
+        // ─ 殘影 ─
+        VESTIGE_IDS.addAll(List.of(
+            "dark_vestige", "faint_vestige", "twinkling_vestige", "brilliant_vestige"
+        ));
+    }
+
     // ── 初始化 ──────────────────────────────────────────────────────────────
 
     @Override
     public void onEnable() {
-        ITEM_ID_KEY     = new NamespacedKey(this, "accessory_id");
-        MENU_OPENER_KEY = new NamespacedKey(this, "menu_opener");
+        ITEM_ID_KEY          = new NamespacedKey(this, "accessory_id");
+        MENU_OPENER_KEY      = new NamespacedKey(this, "menu_opener");
+        UPGRADE_KEY_PREFIX   = new NamespacedKey(this, "upgrade_prefix_placeholder");
         SLOT_KEYS = new NamespacedKey[5];
         for (int i = 0; i < 5; i++) SLOT_KEYS[i] = new NamespacedKey(this, "slot_" + i);
 
+        // ── 現有飾品 ─────────────────────────────────────────────────────
         registerAccessory(new ArdentFlower(this));
         registerAccessory(new AshesToAshes(this));
         registerAccessory(new BlackSheetMusic(this));
@@ -117,6 +187,40 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         registerAccessory(new TrialPlanGuide(this));
         registerAccessory(new TwinklingVestige(this));
 
+        // ── 新飾品 ───────────────────────────────────────────────────────
+        registerAccessory(new ArtisticSense(this));
+        registerAccessory(new BloodFlameSword(this));
+        registerAccessory(new BloodyGadget(this));
+        registerAccessory(new Carmilla(this));
+        registerAccessory(new ChildWithinAFlask(this));
+        registerAccessory(new DarkVestige(this));
+        registerAccessory(new EndlessHunger(this));
+        registerAccessory(new ETypeDimensionalDagger(this));
+        registerAccessory(new FaintVestige(this));
+        registerAccessory(new FlowerInTheMirror(this));
+        registerAccessory(new GlimpseOfFlames(this));
+        registerAccessory(new GreenSpirit(this));
+        registerAccessory(new HandheldMirror(this));
+        registerAccessory(new LateBloomersTattoo(this));
+        registerAccessory(new Millarca(this));
+        registerAccessory(new Nebulizer(this));
+        registerAccessory(new NixieDivergence(this));
+        registerAccessory(new Prejudice(this));
+        registerAccessory(new RoyalJellyPerfume(this));
+        registerAccessory(new RustyCommemorativeCoin(this));
+        registerAccessory(new SanguineBlossomBolus(this));
+        registerAccessory(new SomeonesDevice(this));
+        registerAccessory(new Sownpour(this));
+        registerAccessory(new SpecialContract(this));
+        registerAccessory(new StrangeGlyphInscriptions(this));
+        registerAccessory(new Sunshower(this));
+        registerAccessory(new Thunderbranch(this));
+
+        // ── Gacha 系統 ──────────────────────────────────────────────────
+        gachaChestManager = new GachaChestManager(this);
+        gachaListener = new GachaListener(this, gachaChestManager);
+        getServer().getPluginManager().registerEvents(gachaListener, this);
+
         startPassiveTick();
         getServer().getPluginManager().registerEvents(this, this);
 
@@ -128,6 +232,16 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
             getgift.setExecutor(this::onGetGift);
             getgift.setTabCompleter(this);
         }
+
+        PluginCommand gachachest = getCommand("gachachest");
+        if (gachachest != null) {
+            gachachest.setExecutor(this::onGachaChest);
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        if (gachaChestManager != null) gachaChestManager.onDisable();
     }
 
     public void registerAccessory(Accessory acc) {
@@ -160,6 +274,46 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
     public List<Accessory> getEquippedAccessories(Player player) {
         return AccessoryMenu.getEquipped(player, this);
+    }
+
+    public int getTier(String id) {
+        return TIER_MAP.getOrDefault(id, 1);
+    }
+
+    public boolean isVestige(String id) {
+        return VESTIGE_IDS.contains(id);
+    }
+
+    // ── 升級系統 ────────────────────────────────────────────────────────────
+
+    public int getUpgradeLevel(Player player, String accessoryId) {
+        NamespacedKey key = new NamespacedKey(this, "upgrade_" + accessoryId);
+        return player.getPersistentDataContainer().getOrDefault(key, PersistentDataType.INTEGER, 0);
+    }
+
+    public void setUpgradeLevel(Player player, String accessoryId, int level) {
+        NamespacedKey key = new NamespacedKey(this, "upgrade_" + accessoryId);
+        player.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, Math.min(3, Math.max(0, level)));
+    }
+
+    public double getUpgradeMultiplier(Player player, String accessoryId) {
+        return switch (getUpgradeLevel(player, accessoryId)) {
+            case 1 -> 1.25;
+            case 2 -> 1.50;
+            case 3 -> 2.00;
+            default -> 1.0;
+        };
+    }
+
+    // 殘影 ID → 可升級的目標飾品等級
+    private int vestigeTier(String vestigeId) {
+        return switch (vestigeId) {
+            case "dark_vestige"      -> 1;
+            case "faint_vestige"     -> 2;
+            case "twinkling_vestige" -> 3;
+            case "brilliant_vestige" -> 4;
+            default -> -1;
+        };
     }
 
     // ── 開啟選單 ────────────────────────────────────────────────────────────
@@ -231,18 +385,52 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         int size = menu.getInventory().getSize();
 
         if (raw < size) {
-            // 點擊 GUI 區域
             if (!menu.isAccessorySlot(raw)) {
                 event.setCancelled(true);
                 return;
             }
-            // 飾品欄位：只允許放入飾品，或取出
+            // 飾品欄位：檢查是否用殘影升級
             ItemStack cursor = event.getCursor();
-            if (cursor != null && !cursor.getType().isAir() && !isAccessory(cursor)) {
-                event.setCancelled(true);
+            if (cursor != null && !cursor.getType().isAir()) {
+                String cursorId = getAccessoryId(cursor);
+                if (cursorId != null && isVestige(cursorId)) {
+                    // 嘗試升級當前格子的飾品
+                    ItemStack current = event.getCurrentItem();
+                    String currentId = getAccessoryId(current);
+                    if (currentId != null && !isVestige(currentId)) {
+                        int vTier = vestigeTier(cursorId);
+                        int aTier = getTier(currentId);
+                        if (vTier == aTier) {
+                            int curLevel = getUpgradeLevel(player, currentId);
+                            if (curLevel < 3) {
+                                event.setCancelled(true);
+                                setUpgradeLevel(player, currentId, curLevel + 1);
+                                // 消耗一個殘影
+                                if (cursor.getAmount() > 1) cursor.setAmount(cursor.getAmount() - 1);
+                                else event.getView().setCursor(null);
+                                int newLevel = curLevel + 1;
+                                player.sendMessage(color("&#FFD700飾品升級成功！&#AAAAAA等級：&#FFFFFF▲ Lv." + newLevel));
+                                // 刷新選單
+                                Bukkit.getScheduler().runTaskLater(this, () -> {
+                                    menu.saveEquipped();
+                                    menu.refresh();
+                                }, 1L);
+                            } else {
+                                event.setCancelled(true);
+                                player.sendMessage(color("&#FF5555此飾品已達最高等級（Lv.3）。"));
+                            }
+                            return;
+                        }
+                    }
+                    event.setCancelled(true);
+                    return;
+                }
+                // 非殘影：只允許飾品
+                if (!isAccessory(cursor)) {
+                    event.setCancelled(true);
+                }
             }
         } else {
-            // 點擊玩家背包：阻止 Shift+Click 自動放入 GUI
             if (event.getClick().isShiftClick()) {
                 event.setCancelled(true);
             }
@@ -307,7 +495,18 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         openMenu(event.getPlayer());
     }
 
-    // ── 攻擊 / 受傷 / 擊殺事件，分發給裝備中的飾品 ─────────────────────────
+    // ── 飾品 onInteract 分發（右鍵任意互動） ────────────────────────────────
+
+    @EventHandler
+    public void onAccessoryInteract(PlayerInteractEvent event) {
+        if (isMenuOpener(event.getItem())) return; // 已由上方處理
+        Player player = event.getPlayer();
+        for (Accessory acc : getEquippedAccessories(player)) {
+            acc.onInteract(event, player);
+        }
+    }
+
+    // ── 攻擊 / 受傷 / 受任何傷害 / 擊殺事件，分發給裝備中的飾品 ──────────────
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
@@ -319,6 +518,16 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         if (event.getEntity() instanceof Player victim) {
             for (Accessory acc : getEquippedAccessories(victim)) {
                 acc.onDamaged(event, victim);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (event instanceof EntityDamageByEntityEvent) return; // 已由 onEntityDamageByEntity 處理
+        if (event.getEntity() instanceof Player victim) {
+            for (Accessory acc : getEquippedAccessories(victim)) {
+                acc.onAnyDamage(event, victim);
             }
         }
     }
@@ -356,6 +565,13 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         }
         if (id.equals("menu")) {
             player.getInventory().addItem(createMenuOpener());
+        } else if (id.equals("lunacy")) {
+            if (!player.hasPermission("limbus.admin") && !player.isOp()) return true;
+            int amount = 1;
+            if (args.length >= 2) {
+                try { amount = Math.min(64, Integer.parseInt(args[1])); } catch (NumberFormatException ignored) {}
+            }
+            player.getInventory().addItem(gachaListener.createLunacy(amount));
         } else {
             Accessory acc = accessories.get(id);
             if (acc != null) acc.give(player);
@@ -363,10 +579,49 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         return true;
     }
 
+    private boolean onGachaChest(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!(sender instanceof Player player)) return true;
+        if (!player.hasPermission("limbus.admin") && !player.isOp()) {
+            player.sendMessage(color("&#FF5555你沒有權限使用此指令。"));
+            return true;
+        }
+        if (args.length == 0) return false;
+
+        org.bukkit.block.Block target = player.getTargetBlockExact(10);
+        if (target == null || target.getType() != Material.CHEST) {
+            player.sendMessage(color("&#FF5555請看向一個箱子（10格內）。"));
+            return true;
+        }
+
+        switch (args[0].toLowerCase()) {
+            case "set" -> {
+                if (gachaChestManager.register(target.getLocation())) {
+                    player.sendMessage(color("&#FFD700已設定此箱子為抽取箱。"));
+                } else {
+                    player.sendMessage(color("&#AAAAAA此箱子已是抽取箱。"));
+                }
+            }
+            case "remove" -> {
+                if (gachaChestManager.unregister(target.getLocation())) {
+                    player.sendMessage(color("&#FFD700已移除此箱子的抽取箱狀態。"));
+                } else {
+                    player.sendMessage(color("&#AAAAAA此箱子不是抽取箱。"));
+                }
+            }
+            default -> { return false; }
+        }
+        return true;
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equals("gachachest")) {
+            if (args.length == 1) return List.of("set", "remove").stream()
+                .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
+            return Collections.emptyList();
+        }
         if (args.length == 1) {
-            List<String> ids = new ArrayList<>(List.of("admin", "menu"));
+            List<String> ids = new ArrayList<>(List.of("admin", "menu", "lunacy"));
             ids.addAll(accessories.keySet());
             return ids.stream().filter(s -> s.startsWith(args[0].toLowerCase())).toList();
         }

@@ -81,10 +81,28 @@ public class AccessoryMenu implements InventoryHolder {
             if (id != null) {
                 Accessory acc = plugin.getAccessory(id);
                 if (acc != null) {
-                    inventory.setItem(ACCESSORY_SLOTS[i], acc.createItem());
+                    inventory.setItem(ACCESSORY_SLOTS[i], withUpgradeLore(acc, player));
                 }
             }
         }
+    }
+
+    // 重新整理顯示（升級後呼叫）
+    public void refresh() {
+        loadEquipped();
+    }
+
+    // 若飾品有升級，附加升級等級到 Lore
+    private ItemStack withUpgradeLore(Accessory acc, Player player) {
+        ItemStack item = acc.createItem();
+        int level = plugin.getUpgradeLevel(player, acc.getId());
+        if (level <= 0) return item;
+        ItemMeta meta = item.getItemMeta();
+        List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+        lore.add(plugin.color("&#FFD700▲ 升級 Lv." + level));
+        meta.setLore(lore);
+        item.setItemMeta(meta);
+        return item;
     }
 
     // 供被動 Tick / 事件讀取目前裝備（直接讀 PDC，不依賴介面是否開啟）
