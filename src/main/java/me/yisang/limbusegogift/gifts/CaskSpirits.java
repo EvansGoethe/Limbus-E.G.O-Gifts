@@ -8,7 +8,7 @@ import org.bukkit.potion.PotionEffectType;
 public class CaskSpirits extends BaseAccessory {
     public CaskSpirits(LimbusEGOGift plugin) {
         super(plugin, "cask_spirits", "桶裝烈酒",
-                "&#C89040", "我從未想過沒有酒的生活。",
+                "&#A8BE78", "我從未想過沒有酒的生活。",
                 "觸發（受傷）：力量 II 持續 3 秒");
     }
     @Override public void onDamaged(EntityDamageByEntityEvent event, Player victim) {

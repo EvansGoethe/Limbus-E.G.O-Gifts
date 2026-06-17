@@ -33,7 +33,9 @@ public abstract class BaseAccessory implements Accessory {
         this.id = id;
         this.name = name;
         List<String> lines = new ArrayList<>();
-        lines.add(descColor + description);
+        for (String part : description.split("\n")) {
+            lines.add(descColor + part);
+        }
         lines.add("&#AAAAAA" + effect);
         this.loreLines = List.copyOf(lines);
     }
@@ -45,7 +47,7 @@ public abstract class BaseAccessory implements Accessory {
     public ItemStack createItem() {
         ItemStack item = new ItemStack(Material.PAPER);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(plugin.color("&#FFD700" + name));
+        meta.setDisplayName(plugin.color("&#FFFFFF" + name));
         meta.setLore(loreLines.stream().map(plugin::color).toList());
         meta.setItemModel(new NamespacedKey("gifts", id));
         meta.setUnbreakable(true);
