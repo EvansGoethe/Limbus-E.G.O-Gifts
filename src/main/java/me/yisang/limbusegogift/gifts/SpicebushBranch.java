@@ -7,7 +7,7 @@ import org.bukkit.potion.PotionEffectType;
 public class SpicebushBranch extends BaseAccessory {
     public SpicebushBranch(LimbusEGOGift plugin) {
         super(plugin, "spicebush_branch", "檀香梅枝",
-                "&#FF029B", "我看不見花朵，可我聞到花香。\n花香盛放，我在那兒挖起墳墓。",
+                "&#FFF29B", "我看不見花朵，可我聞到花香。\n花香盛放，我在那兒挖起墳墓。",
                 "被動：中毒時轉化為回血效果");
     }
     @Override public void onPassiveTick(Player player) {
