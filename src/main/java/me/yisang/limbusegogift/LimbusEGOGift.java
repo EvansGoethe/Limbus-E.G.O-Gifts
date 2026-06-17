@@ -442,6 +442,13 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         AccessoryMenu menu = openMenus.get(player.getUniqueId());
         if (menu == null || !event.getInventory().equals(menu.getInventory())) return;
 
+        // 殘影不可拖入飾品欄
+        String draggedId = getAccessoryId(event.getOldCursor());
+        if (draggedId != null && isVestige(draggedId)) {
+            event.setCancelled(true);
+            return;
+        }
+
         for (int slot : event.getRawSlots()) {
             if (slot < menu.getInventory().getSize() && !menu.isAccessorySlot(slot)) {
                 event.setCancelled(true);
@@ -537,6 +544,14 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         for (Accessory acc : getEquippedAccessories(deceased)) {
             acc.onDeath(event, deceased);
         }
+        // 飾品欄開啟工具死亡不掉落
+        event.getDrops().removeIf(item -> {
+            if (isMenuOpener(item)) {
+                event.getItemsToKeep().add(item);
+                return true;
+            }
+            return false;
+        });
     }
 
     @EventHandler
