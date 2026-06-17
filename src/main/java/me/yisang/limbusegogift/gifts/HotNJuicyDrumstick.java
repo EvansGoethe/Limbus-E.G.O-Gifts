@@ -6,10 +6,11 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class HotNJuicyDrumstick extends BaseAccessory {
     public HotNJuicyDrumstick(LimbusEGOGift plugin) {
-        super(plugin, "hot_n_juicy_drumstick", "火熱多汁琵琶腿", "&7被動：不消耗飢餓值，力量 I");
+        super(plugin, "hot_n_juicy_drumstick", "火熱多汁枇杷腿",
+                "&#D77F00", "雞肉就是雞肉囉。",
+                "被動：飽食度不流失");
     }
     @Override public void onPassiveTick(Player player) {
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 30, 1, true, false));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 30, 0, true, false));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 30, 0, true, false));
     }
 }

@@ -6,7 +6,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class EbonyBrooch extends BaseAccessory {
     public EbonyBrooch(LimbusEGOGift plugin) {
-        super(plugin, "ebony_brooch", "黑檀胸針", "&7被動：夜視；夜晚獲得速度 I");
+        super(plugin, "ebony_brooch", "黑檀胸針",
+                "&#5B1365", "女王的蘋果。",
+                "被動：夜視；夜晚獲得速度 I");
     }
     @Override public void onPassiveTick(Player player) {
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 30, 0, true, false));

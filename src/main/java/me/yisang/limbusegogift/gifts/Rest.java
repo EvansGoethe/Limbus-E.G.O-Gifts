@@ -6,11 +6,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class Rest extends BaseAccessory {
     public Rest(LimbusEGOGift plugin) {
-        super(plugin, "rest", "安息", "&7被動：靜止時生命再生 II");
+        super(plugin, "rest", "安息",
+                "&#FFFFFF", "\"一口棺材被孤單地放置於此。\"",
+                "被動：靜止時生命再生 I");
     }
     @Override public void onPassiveTick(Player player) {
         if (player.getVelocity().length() < 0.05) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30, 1, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30, 0, true, false));
         }
     }
 }

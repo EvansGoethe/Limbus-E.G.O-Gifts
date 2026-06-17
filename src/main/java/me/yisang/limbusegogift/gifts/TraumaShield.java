@@ -9,7 +9,9 @@ import java.util.UUID;
 public class TraumaShield extends BaseAccessory {
     private final Map<UUID, Long> cooldowns = new HashMap<>();
     public TraumaShield(LimbusEGOGift plugin) {
-        super(plugin, "trauma_shield", "精神遮蔽力場", "&7受傷時：每 60 秒吸收一次傷害");
+        super(plugin, "trauma_shield", "精神屏蔽力場",
+                "&#CBCBCB", "反精神力場盾",
+                "受傷時：每 60 秒吸收一次傷害");
     }
     @Override public void onDamaged(EntityDamageByEntityEvent event, Player victim) {
         long now = System.currentTimeMillis();

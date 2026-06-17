@@ -7,14 +7,11 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class CaskSpirits extends BaseAccessory {
     public CaskSpirits(LimbusEGOGift plugin) {
-        super(plugin, "cask_spirits", "桶裝烈酒", "&7被動：生命再生 I；攻擊時偶有反效果");
+        super(plugin, "cask_spirits", "桶裝烈酒",
+                "&#C89040", "我從未想過沒有酒的生活。",
+                "觸發（受傷）：力量 II 持續 3 秒");
     }
-    @Override public void onPassiveTick(Player player) {
-        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30, 0, true, false));
-    }
-    @Override public void onAttack(EntityDamageByEntityEvent event, Player attacker) {
-        if (Math.random() < 0.10) {
-            attacker.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40, 0, true, true));
-        }
+    @Override public void onDamaged(EntityDamageByEntityEvent event, Player victim) {
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 60, 1, true, true));
     }
 }

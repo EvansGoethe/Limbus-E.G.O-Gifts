@@ -8,7 +8,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class ColdIllusion extends BaseAccessory {
     public ColdIllusion(LimbusEGOGift plugin) {
-        super(plugin, "cold_illusion", "冰冷的幻想", "&7攻擊時：施加緩慢 II 3 秒");
+        super(plugin, "cold_illusion", "冰冷的幻想",
+                "&#33CF4F", "綻放的九人會。",
+                "攻擊時：施加緩慢 II 3 秒");
     }
     @Override public void onAttack(EntityDamageByEntityEvent event, Player attacker) {
         if (event.getEntity() instanceof LivingEntity target) {

@@ -1,21 +1,22 @@
 package me.yisang.limbusegogift.gifts;
 import me.yisang.limbusegogift.BaseAccessory;
 import me.yisang.limbusegogift.LimbusEGOGift;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class SourLiquorAroma extends BaseAccessory {
     public SourLiquorAroma(LimbusEGOGift plugin) {
-        super(plugin, "sour_liquor_aroma", "酸味的酒香", "&7被動：速度 I；攻擊時 20% 機率施加緩慢 I");
+        super(plugin, "sour_liquor_aroma", "酸味的酒香",
+                "&#00BC6B", "\"原來不是客人，而是惡客啊。\"",
+                "被動：5 格以內的敵人持續受虛弱 I");
     }
     @Override public void onPassiveTick(Player player) {
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 0, true, false));
-    }
-    @Override public void onAttack(EntityDamageByEntityEvent event, Player attacker) {
-        if (Math.random() < 0.20 && event.getEntity() instanceof LivingEntity target) {
-            target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 60, 0, true, true));
+        for (Entity e : player.getNearbyEntities(5, 5, 5)) {
+            if (e instanceof LivingEntity living && !(e instanceof Player)) {
+                living.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 40, 0, true, false));
+            }
         }
     }
 }

@@ -8,7 +8,9 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.Objects;
 public class Homeward extends BaseAccessory {
     public Homeward(LimbusEGOGift plugin) {
-        super(plugin, "homeward", "歸途", "&7被動：血量高於 80% 時生命再生 II");
+        super(plugin, "homeward", "歸途",
+                "&#8EC58E", "\"在我奪走你的家之前，帶著它離開。快。\"",
+                "被動：血量高於 80% 時生命再生 II");
     }
     @Override public void onPassiveTick(Player player) {
         double max = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue();

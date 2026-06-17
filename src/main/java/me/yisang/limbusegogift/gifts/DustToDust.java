@@ -7,7 +7,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class DustToDust extends BaseAccessory {
     public DustToDust(LimbusEGOGift plugin) {
-        super(plugin, "dust_to_dust", "土歸土", "&7擊殺時：30% 機率獲得吸收 I 5 秒");
+        super(plugin, "dust_to_dust", "土歸土",
+                "&#9A9A9A", "那並不是霧。",
+                "擊殺時：30% 機率獲得吸收 I 5 秒");
     }
     @Override public void onKill(EntityDeathEvent event, Player killer) {
         if (Math.random() < 0.30) {

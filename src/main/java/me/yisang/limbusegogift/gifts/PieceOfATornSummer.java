@@ -2,19 +2,21 @@ package me.yisang.limbusegogift.gifts;
 import me.yisang.limbusegogift.BaseAccessory;
 import me.yisang.limbusegogift.LimbusEGOGift;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class PieceOfATornSummer extends BaseAccessory {
     public PieceOfATornSummer(LimbusEGOGift plugin) {
-        super(plugin, "piece_of_a_torn_summer", "破碎之夏的殘片", "&7受到火焰傷害時：獲得抗性提升 II 3 秒");
+        super(plugin, "piece_of_a_torn_summer", "破碎之夏的殘片",
+                "&#5FE2C5", "\"試圖了解變化莫測的天氣，在我看來是毫無意義的。\"",
+                "觸發（著火/熔岩傷害）：獲得力量 I 5 秒");
     }
-    @Override public void onDamaged(EntityDamageByEntityEvent event, Player victim) {
+    @Override public void onAnyDamage(EntityDamageEvent event, Player victim) {
         DamageCause cause = event.getCause();
         if (cause == DamageCause.FIRE || cause == DamageCause.FIRE_TICK
                 || cause == DamageCause.HOT_FLOOR || cause == DamageCause.LAVA) {
-            victim.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, 60, 1, true, true));
+            victim.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 100, 0, true, true));
         }
     }
 }

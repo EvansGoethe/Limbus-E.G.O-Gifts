@@ -6,7 +6,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 public class Harestride extends BaseAccessory {
     public Harestride(LimbusEGOGift plugin) {
-        super(plugin, "harestride", "卯足", "&7被動：速度 II，跳躍提升 I");
+        super(plugin, "harestride", "卯足",
+                "&#AAD179", "雲解顯現。",
+                "被動：速度 II，跳躍提升 I");
     }
     @Override public void onPassiveTick(Player player) {
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 1, true, false));

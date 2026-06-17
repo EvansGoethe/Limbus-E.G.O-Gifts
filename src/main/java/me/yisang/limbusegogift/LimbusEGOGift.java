@@ -62,51 +62,50 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     private static final Set<String> VESTIGE_IDS = new HashSet<>();
 
     static {
-        // ─ Tier I ─
+        // ─ Tier I (9) ─
         for (String id : new String[]{
-            "broken_compass", "dry_to_the_bone_breast", "hardship",
-            "homeward", "piece_of_a_torn_summer", "sour_liquor_aroma",
+            "rags", "ashes_to_ashes", "lithograph",
+            "emerald_elytra", "plume_of_proof", "blue_zippo_lighter",
             // 新飾品
             "nixie_divergence", "prejudice", "bloody_gadget"
         }) TIER_MAP.put(id, 1);
 
-        // ─ Tier II ─
+        // ─ Tier II (23) ─
         for (String id : new String[]{
-            "ardent_flower", "ashes_to_ashes", "black_sheet_music",
-            "blue_zippo_lighter", "cask_spirits", "cold_illusion",
-            "cqc_manual", "crystallized_blood", "ebony_brooch",
-            "flower_mound", "frozen_cries", "harestride",
-            "pain_of_stifled_rage", "plume_of_proof", "rest",
-            "trial_plan_guide",
+            "harestride", "strange_glyph_talisman", "frozen_cries",
+            "crystallized_blood", "ebony_brooch", "tangled_bones",
+            "tenacity_bolus", "oracle", "dreaming_electric_sheep",
+            "trauma_shield", "homeward", "pain_of_stifled_rage",
+            "golden_urn", "smoking_gunpowder", "cqc_manual",
+            "mental_corruption_boosting_gas",
             // 新飾品
             "carmilla", "child_within_a_flask", "green_spirit",
             "sanguine_blossom_bolus", "late_bloomers_tattoo",
             "e_type_dimensional_dagger", "bloodflame_sword"
         }) TIER_MAP.put(id, 2);
 
-        // ─ Tier III ─
+        // ─ Tier III (27) ─
         for (String id : new String[]{
-            "chief_butlers_secret_arts", "clear_mirror_calm_water",
-            "dreaming_electric_sheep", "dueling_manual_book_3",
-            "dust_to_dust", "finifugality", "golden_urn",
-            "hot_n_juicy_drumstick", "jin_gang_bolus", "keenbranch",
-            "la_manchaland_all_day_pass", "la_manchaland_standard_pass",
-            "lithograph", "mask_of_the_parade", "mental_corruption_boosting_gas",
-            "moon_in_the_water", "phantom_pain", "smoking_gunpowder",
-            "strange_glyph_talisman",
+            "dust_to_dust", "phantom_pain", "moon_in_the_water",
+            "ardent_flower", "hot_n_juicy_drumstick", "dry_to_the_bone_breast",
+            "distant_star", "broken_compass", "illusory_hunt",
+            "keenbranch", "chief_butlers_secret_arts", "finifugality",
+            "trial_plan_guide", "sour_liquor_aroma", "spicebush_branch",
+            "hardship", "rest", "la_manchaland_all_day_pass",
+            "la_manchaland_standard_pass",
             // 新飾品
             "nebulizer", "strange_glyph_inscriptions", "rusty_commemorative_coin",
             "someones_device", "special_contract", "flower_in_the_mirror",
             "sunshower", "thunderbranch"
         }) TIER_MAP.put(id, 3);
 
-        // ─ Tier IV ─
+        // ─ Tier IV (21) ─
         for (String id : new String[]{
-            "distant_star", "emerald_elytra", "illusory_hunt",
-            "oracle", "piece_of_crumbled_egg", "piece_of_relationship",
-            "rags", "ruin", "spicebush_branch", "tangled_bones",
-            "tenacity_bolus", "the_book_of_vengeance", "tranquil_lotus_bolus",
-            "trauma_shield",
+            "clear_mirror_calm_water", "flower_mound", "piece_of_crumbled_egg",
+            "piece_of_a_torn_summer", "mask_of_the_parade", "black_sheet_music",
+            "cold_illusion", "ruin", "jin_gang_bolus",
+            "piece_of_relationship", "tranquil_lotus_bolus", "cask_spirits",
+            "the_book_of_vengeance", "dueling_manual_book_3",
             // 新飾品
             "endless_hunger", "royal_jelly_perfume", "millarca",
             "artistic_sense", "handheld_mirror", "glimpse_of_flames", "sownpour"
