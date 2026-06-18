@@ -16,5 +16,5 @@ commands:
     usage: /gachachest <set|remove>
     permission: limbus.admin
   egogift:
-    description: 開啟飾品圖鑑
-    usage: /egogift category
+    description: 飾品系統指令
+    usage: /egogift <category|reload>

@@ -631,13 +631,24 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     }
 
     private boolean onEgoGift(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player player)) return true;
-        if (args.length > 0 && args[0].equalsIgnoreCase("category")) {
-            GiftCatalogGUI gui = new GiftCatalogGUI(this, 1);
-            player.openInventory(gui.getInventory());
-            return true;
+        if (args.length == 0) return false;
+        switch (args[0].toLowerCase()) {
+            case "category" -> {
+                if (!(sender instanceof Player player)) return true;
+                GiftCatalogGUI gui = new GiftCatalogGUI(this, 1);
+                player.openInventory(gui.getInventory());
+            }
+            case "reload" -> {
+                if (sender instanceof Player p && !p.hasPermission("limbus.admin") && !p.isOp()) {
+                    sender.sendMessage(color("&#FF5555你沒有權限使用此指令。"));
+                    return true;
+                }
+                gachaChestManager.reload();
+                sender.sendMessage(color("&#FFD700[LimbusEGOGift] &#AAAAAA插件資料已重新載入。"));
+            }
+            default -> { return false; }
         }
-        return false;
+        return true;
     }
 
     private boolean onGachaChest(CommandSender sender, Command cmd, String label, String[] args) {
@@ -677,7 +688,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (command.getName().equals("egogift")) {
-            if (args.length == 1) return List.of("category").stream()
+            if (args.length == 1) return List.of("category", "reload").stream()
                 .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
             return Collections.emptyList();
         }

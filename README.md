@@ -66,6 +66,7 @@
 |------|------|------|
 | `/accessories` | 開啟飾品欄位 GUI | 所有人 |
 | `/egogift category` | 開啟飾品圖鑑（依 Tier 分頁瀏覽，物品不可取出） | 所有人 |
+| `/egogift reload` | 重新載入插件資料（gacha_chests.yml） | `limbus.admin` / OP |
 | `/getgift <id>` | 取得指定飾品 | `limbus.admin` / OP |
 | `/getgift menu` | 取得飾品欄位開啟物品（下界之星，死亡不掉落） | `limbus.admin` / OP |
 | `/getgift admin` | 開啟管理員 GUI（翻頁瀏覽所有飾品） | `limbus.admin` / OP |

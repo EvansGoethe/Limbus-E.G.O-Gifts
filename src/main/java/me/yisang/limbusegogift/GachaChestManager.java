@@ -128,6 +128,12 @@ public class GachaChestManager {
         } catch (NumberFormatException e) { return null; }
     }
 
+    public void reload() {
+        onDisable();
+        textDisplays.clear();
+        load();
+    }
+
     public void onDisable() {
         textDisplays.forEach((k, uid) -> {
             Entity e = Bukkit.getEntity(uid);
