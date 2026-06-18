@@ -236,6 +236,12 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         if (gachachest != null) {
             gachachest.setExecutor(this::onGachaChest);
         }
+
+        PluginCommand egogift = getCommand("egogift");
+        if (egogift != null) {
+            egogift.setExecutor(this::onEgoGift);
+            egogift.setTabCompleter(this);
+        }
     }
 
     @Override
@@ -360,6 +366,23 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
+        // 飾品圖鑑 click
+        if (event.getInventory().getHolder() instanceof GiftCatalogGUI catalog) {
+            int slot = event.getRawSlot();
+            if (slot >= event.getInventory().getSize()) {
+                if (event.getClick().isShiftClick()) event.setCancelled(true);
+                return;
+            }
+            event.setCancelled(true);
+            int tier = catalog.getTierForSlot(slot);
+            if (tier != -1 && tier != catalog.getCurrentTier()) {
+                catalog.switchTier(player, tier);
+            } else if (catalog.isCloseSlot(slot)) {
+                player.closeInventory();
+            }
+            return;
+        }
+
         // Admin GUI click
         GiftAdminGUI adminGui = openAdminMenus.get(player.getUniqueId());
         if (adminGui != null && event.getInventory().equals(adminGui.getInventory())) {
@@ -439,6 +462,10 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
+        if (event.getInventory().getHolder() instanceof GiftCatalogGUI) {
+            event.setCancelled(true);
+            return;
+        }
         AccessoryMenu menu = openMenus.get(player.getUniqueId());
         if (menu == null || !event.getInventory().equals(menu.getInventory())) return;
 
@@ -603,6 +630,16 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         return true;
     }
 
+    private boolean onEgoGift(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!(sender instanceof Player player)) return true;
+        if (args.length > 0 && args[0].equalsIgnoreCase("category")) {
+            GiftCatalogGUI gui = new GiftCatalogGUI(this, 1);
+            player.openInventory(gui.getInventory());
+            return true;
+        }
+        return false;
+    }
+
     private boolean onGachaChest(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player player)) return true;
         if (!player.hasPermission("limbus.admin") && !player.isOp()) {
@@ -639,6 +676,11 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equals("egogift")) {
+            if (args.length == 1) return List.of("category").stream()
+                .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
+            return Collections.emptyList();
+        }
         if (command.getName().equals("gachachest")) {
             if (args.length == 1) return List.of("set", "remove").stream()
                 .filter(s -> s.startsWith(args[0].toLowerCase())).toList();

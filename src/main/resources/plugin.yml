@@ -15,3 +15,6 @@ commands:
     description: 設定或移除抽取箱
     usage: /gachachest <set|remove>
     permission: limbus.admin
+  egogift:
+    description: 開啟飾品圖鑑
+    usage: /egogift category
