@@ -45,7 +45,7 @@ public abstract class BaseAccessory implements Accessory {
 
     @Override
     public ItemStack createItem() {
-        ItemStack item = new ItemStack(Material.PAPER);
+        ItemStack item = new ItemStack(Material.TRIAL_KEY);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(plugin.color("&#FFFFFF" + name));
         meta.setLore(loreLines.stream().map(plugin::color).toList());

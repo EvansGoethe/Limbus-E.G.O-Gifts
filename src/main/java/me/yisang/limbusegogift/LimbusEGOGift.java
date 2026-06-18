@@ -491,6 +491,16 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         }
     }
 
+    // ── 阻止飾品（試煉鑰匙）開啟試煉寶箱 ────────────────────────────────────
+
+    @EventHandler
+    public void onVaultInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getClickedBlock() == null) return;
+        if (event.getClickedBlock().getType() != Material.VAULT) return;
+        if (isAccessory(event.getItem())) event.setCancelled(true);
+    }
+
     // ── 選單開啟物品右鍵 ────────────────────────────────────────────────────
 
     @EventHandler

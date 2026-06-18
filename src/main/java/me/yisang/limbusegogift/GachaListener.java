@@ -33,10 +33,10 @@ public class GachaListener implements Listener {
     // ── 狂氣物品 ──────────────────────────────────────────────────────────────
 
     public ItemStack createLunacy(int amount) {
-        ItemStack item = new ItemStack(Material.ECHO_SHARD, amount);
+        ItemStack item = new ItemStack(Material.WITHER_ROSE, amount);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(plugin.color("&#9928BB狂氣"));
-        meta.setLore(List.of(plugin.color("&#AAAAAA抽取飾品的代幣")));
+        meta.setDisplayName(plugin.color("&#FF0000狂氣"));
+        meta.setLore(List.of(plugin.color("&#FF0000人因心懷狂氣，才有前進的動力")));
         meta.setItemModel(new NamespacedKey("gifts", "lunacy"));
         meta.getPersistentDataContainer().set(LUNACY_KEY, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
@@ -46,6 +46,16 @@ public class GachaListener implements Listener {
     public boolean isLunacy(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
         return item.getItemMeta().getPersistentDataContainer().has(LUNACY_KEY, PersistentDataType.BYTE);
+    }
+
+    // ── 阻止狂氣種花 ──────────────────────────────────────────────────────────
+
+    @EventHandler
+    public void onLunacyPlace(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (!isLunacy(event.getItem())) return;
+        if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.CHEST) return;
+        event.setCancelled(true);
     }
 
     // ── 右鍵箱子觸發 ─────────────────────────────────────────────────────────
