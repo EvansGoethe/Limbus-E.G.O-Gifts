@@ -10,7 +10,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 public class GachaListener implements Listener {
@@ -21,13 +22,11 @@ public class GachaListener implements Listener {
     private final LimbusEGOGift plugin;
     private final GachaChestManager chestMgr;
     private final NamespacedKey LUNACY_KEY;
-    private final NamespacedKey HISTORY_KEY;
 
     public GachaListener(LimbusEGOGift plugin, GachaChestManager chestMgr) {
         this.plugin = plugin;
         this.chestMgr = chestMgr;
         this.LUNACY_KEY = new NamespacedKey(plugin, "lunacy");
-        this.HISTORY_KEY = new NamespacedKey(plugin, "gacha_history");
     }
 
     // ── 狂氣物品 ──────────────────────────────────────────────────────────────
@@ -87,7 +86,6 @@ public class GachaListener implements Listener {
         boolean isTierIV = plugin.getTier(result.getId()) == 4;
         playDrawEffect(event.getClickedBlock().getLocation(), isTierIV);
 
-        recordDrawn(player, result.getId());
         result.give(player);
 
         String tierColor = isTierIV ? "&#FFD700" : "&#FFFFFF";
@@ -97,24 +95,21 @@ public class GachaListener implements Listener {
     // ── 抽取邏輯 ──────────────────────────────────────────────────────────────
 
     private Accessory draw(Player player) {
-        Set<String> drawn = getDrawnIds(player);
-
         int tier = pickTier();
         List<Accessory> pool = plugin.getAllAccessories().stream()
             .filter(a -> plugin.getTier(a.getId()) == tier && !plugin.isVestige(a.getId()))
             .collect(Collectors.toList());
 
-        List<Accessory> available = pool.stream()
-            .filter(a -> !drawn.contains(a.getId()) && !playerHasInInventory(player, a.getId()) && !playerHasEquipped(player, a.getId()))
-            .collect(Collectors.toList());
+        if (pool.isEmpty()) return null;
 
-        if (available.isEmpty()) {
-            // 全數集齊，給對應等級殘影
-            Accessory vestige = getVestigeForTier(tier);
-            return vestige;
+        Accessory result = pool.get(new Random().nextInt(pool.size()));
+
+        // 抽到重複（背包或飾品欄已持有）→ 改給對應等級殘影
+        if (playerHasInInventory(player, result.getId()) || playerHasEquipped(player, result.getId())) {
+            return getVestigeForTier(tier);
         }
 
-        return available.get(new Random().nextInt(available.size()));
+        return result;
     }
 
     private int pickTier() {
@@ -135,20 +130,6 @@ public class GachaListener implements Listener {
             default -> "brilliant_vestige";
         };
         return plugin.getAccessory(id);
-    }
-
-    // ── 歷史紀錄（存在玩家 PDC）──────────────────────────────────────────────
-
-    private Set<String> getDrawnIds(Player player) {
-        String raw = player.getPersistentDataContainer().getOrDefault(HISTORY_KEY, PersistentDataType.STRING, "");
-        if (raw.isEmpty()) return new HashSet<>();
-        return new HashSet<>(Arrays.asList(raw.split(",")));
-    }
-
-    private void recordDrawn(Player player, String id) {
-        Set<String> drawn = getDrawnIds(player);
-        drawn.add(id);
-        player.getPersistentDataContainer().set(HISTORY_KEY, PersistentDataType.STRING, String.join(",", drawn));
     }
 
     // ── 背包與飾品欄掃描 ──────────────────────────────────────────────────────
