@@ -30,8 +30,8 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
-    private static final String PACK_URL  = "https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack/releases/download/pre_releases/Limbus_E.G.O_Gifts_plugin_ResourcePack.v.20.zip";
-    private static final String PACK_HASH = "35b68648a8b1f1aef3c614b615f5e1bb8733e6ff";
+    private static final String PACK_URL  = "https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack/releases/download/releases/Limbus_E.G.O_Gifts_plugin_ResourcePack.v.20.zip";
+    private static final String PACK_HASH = "e7d4c08ab755554e844cd0a3d927abf9ae0ed136";
     private static final java.util.UUID PACK_UUID = java.util.UUID.nameUUIDFromBytes(
             PACK_URL.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
@@ -603,9 +603,23 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     // ── 指令 ────────────────────────────────────────────────────────────────
 
     private boolean onGetGift(CommandSender sender, Command cmd, String label, String[] args) {
-        if (!(sender instanceof Player player)) return true;
         if (args.length == 0) return false;
 
+        if (args[0].equalsIgnoreCase("give")) {
+            if (!sender.hasPermission("limbus.admin") && !(sender instanceof org.bukkit.command.ConsoleCommandSender)) return true;
+            if (args.length < 3) { sender.sendMessage("用法：/getgift give <玩家> <飾品ID|menu>"); return true; }
+            Player target = Bukkit.getPlayerExact(args[1]);
+            if (target == null) { sender.sendMessage("找不到玩家：" + args[1]); return true; }
+            if (args[2].equalsIgnoreCase("menu")) {
+                target.getInventory().addItem(createMenuOpener());
+                return true;
+            }
+            Accessory acc = accessories.get(args[2].toLowerCase());
+            if (acc != null) acc.give(target);
+            return true;
+        }
+
+        if (!(sender instanceof Player player)) return true;
         String id = args[0].toLowerCase();
         if (id.equals("admin")) {
             if (!player.hasPermission("limbus.admin") && !player.isOp()) return true;
