@@ -30,8 +30,8 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
-    private static final String PACK_URL  = "https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack/releases/download/v23/Limbus_E.G.O_Gifts_plugin_ResourcePack.v.23.zip";
-    private static final String PACK_HASH = "b98079417b2892dce5e8b2b9441654659b329f7c";
+    private static final String PACK_URL  = "https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack/releases/download/v2.4/Limbus_E.G.O_Gifts_plugin_ResourcePack.v2.4.zip";
+    private static final String PACK_HASH = "cbe1084e7b15033d0bb6507781823ff555f45111";
     private static final java.util.UUID PACK_UUID = java.util.UUID.nameUUIDFromBytes(
             PACK_URL.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
