@@ -137,7 +137,7 @@
 | `illusory_hunt` | 異想狩獵 | 攻擊時 20% 機率施加失明 3 秒 |
 | `keenbranch` | 磨尖的樹枝 | 攻擊時 15% 機率傷害提升 50% |
 | `la_manchaland_all_day_pass` | 拉．曼查樂園自由通行證 | 被動：速度 I，跳躍提升 I |
-| `la_manchaland_standard_pass` | 拉．曼查樂園常規通行證 | 被動：速度 I |
+| `la_manchaland_standard_pass` | 拉．曼查樂園常規通行券 | 被動：速度 I |
 | `moon_in_the_water` | 水中月 | 被動：夜視 |
 | `nebulizer` | 霧化吸入器 | 被動：4 格內敵人持續中毒 |
 | `phantom_pain` | 幻痛 | 受傷時 25% 機率減少 70% 傷害 |
@@ -183,7 +183,12 @@
 ## 資源包
 
 插件使用獨立資源包提供飾品外觀，玩家加入時會自動收到推送。  
-資源包來源：[Limbus_E.G.O_Gifts_plugin_ResourcePack](https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack)
+資源包來源：[Limbus_E.G.O_Gifts_plugin_ResourcePack](https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack)  
+目前版本：**v.20**（`releases`）
+
+### CustomModelData 支援
+
+所有飾品（含殘影）皆設有 `customModelData`，基底材質為 `trial_key`，可供外部插件（如 BattlePass）透過 `customModelData` 引用飾品外觀。編號規則為依飾品 ID 字母排序，從 1 開始遞增。
 
 ---
 
