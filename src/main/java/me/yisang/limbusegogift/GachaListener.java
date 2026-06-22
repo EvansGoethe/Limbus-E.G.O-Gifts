@@ -39,7 +39,7 @@ public class GachaListener implements Listener {
     // ── 紡錘代幣 ──────────────────────────────────────────────────────────────
 
     public ItemStack createThread(int amount) {
-        ItemStack item = new ItemStack(Material.ECHO_SHARD, amount);
+        ItemStack item = new ItemStack(Material.STRING, amount);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(plugin.color("&#FFE5A0紡錘"));
         meta.setLore(List.of(plugin.color("&#FFE5A0將所有可能性如絲線般紡織在一起的物品。")));
