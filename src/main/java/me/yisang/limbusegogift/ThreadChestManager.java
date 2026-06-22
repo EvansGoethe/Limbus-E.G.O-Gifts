@@ -15,19 +15,19 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * 紡錘抽獎箱管理器。每個箱子可由管理員自訂「名稱」與「每抽消耗的紡錘數」。
+ * 紡錘（thread）抽獎箱管理器。每個箱子可由管理員自訂「名稱」與「每抽消耗的紡錘數」。
  * 獎池即為箱子本身的 inventory（無限池：抽出複本，箱內不減；依疊總數加權）。
  */
-public class SpindleChestManager {
+public class ThreadChestManager {
 
     private final LimbusEGOGift plugin;
     private final File dataFile;
     private YamlConfiguration config;
     private final Map<String, UUID> textDisplays = new HashMap<>();
 
-    public SpindleChestManager(LimbusEGOGift plugin) {
+    public ThreadChestManager(LimbusEGOGift plugin) {
         this.plugin = plugin;
-        this.dataFile = new File(plugin.getDataFolder(), "spindle_chests.yml");
+        this.dataFile = new File(plugin.getDataFolder(), "thread_chests.yml");
         load();
     }
 
@@ -45,7 +45,7 @@ public class SpindleChestManager {
 
     public void save() {
         try { config.save(dataFile); } catch (IOException e) {
-            plugin.getLogger().severe("無法儲存 spindle_chests.yml: " + e.getMessage());
+            plugin.getLogger().severe("無法儲存 thread_chests.yml: " + e.getMessage());
         }
     }
 
@@ -74,7 +74,7 @@ public class SpindleChestManager {
         return true;
     }
 
-    public boolean isSpindleChest(Location loc) {
+    public boolean isThreadChest(Location loc) {
         return config.contains("chests." + locKey(loc));
     }
 

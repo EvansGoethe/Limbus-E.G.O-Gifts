@@ -23,51 +23,51 @@ public class GachaListener implements Listener {
 
     private final LimbusEGOGift plugin;
     private final GachaChestManager chestMgr;
-    private final SpindleChestManager spindleMgr;
+    private final ThreadChestManager threadMgr;
     private final NamespacedKey LUNACY_KEY;
-    private final NamespacedKey SPINDLE_KEY;
+    private final NamespacedKey THREAD_KEY;
     private final Random rng = new Random();
 
-    public GachaListener(LimbusEGOGift plugin, GachaChestManager chestMgr, SpindleChestManager spindleMgr) {
+    public GachaListener(LimbusEGOGift plugin, GachaChestManager chestMgr, ThreadChestManager threadMgr) {
         this.plugin = plugin;
         this.chestMgr = chestMgr;
-        this.spindleMgr = spindleMgr;
+        this.threadMgr = threadMgr;
         this.LUNACY_KEY = new NamespacedKey(plugin, "lunacy");
-        this.SPINDLE_KEY = new NamespacedKey(plugin, "spindle");
+        this.THREAD_KEY = new NamespacedKey(plugin, "thread");
     }
 
     // ── 紡錘代幣 ──────────────────────────────────────────────────────────────
 
-    public ItemStack createSpindle(int amount) {
+    public ItemStack createThread(int amount) {
         ItemStack item = new ItemStack(Material.ECHO_SHARD, amount);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(plugin.color("&#FFE5A0紡錘"));
         meta.setLore(List.of(plugin.color("&#FFE5A0將所有可能性如絲線般紡織在一起的物品。")));
-        meta.setItemModel(new NamespacedKey("gifts", "spindle"));
-        meta.getPersistentDataContainer().set(SPINDLE_KEY, PersistentDataType.BYTE, (byte) 1);
+        meta.setItemModel(new NamespacedKey("gifts", "thread"));
+        meta.getPersistentDataContainer().set(THREAD_KEY, PersistentDataType.BYTE, (byte) 1);
         item.setItemMeta(meta);
         return item;
     }
 
-    public boolean isSpindle(ItemStack item) {
+    public boolean isThread(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return false;
-        return item.getItemMeta().getPersistentDataContainer().has(SPINDLE_KEY, PersistentDataType.BYTE);
+        return item.getItemMeta().getPersistentDataContainer().has(THREAD_KEY, PersistentDataType.BYTE);
     }
 
-    private int countSpindle(Player player) {
+    private int countThread(Player player) {
         int total = 0;
         for (ItemStack i : player.getInventory().getContents()) {
-            if (isSpindle(i)) total += i.getAmount();
+            if (isThread(i)) total += i.getAmount();
         }
         return total;
     }
 
-    private void removeSpindle(Player player, int amount) {
+    private void removeThread(Player player, int amount) {
         int remaining = amount;
         ItemStack[] contents = player.getInventory().getContents();
         for (int i = 0; i < contents.length && remaining > 0; i++) {
             ItemStack item = contents[i];
-            if (!isSpindle(item)) continue;
+            if (!isThread(item)) continue;
             if (item.getAmount() <= remaining) {
                 remaining -= item.getAmount();
                 contents[i] = null;
@@ -145,12 +145,12 @@ public class GachaListener implements Listener {
     // ── 紡錘抽獎箱 ────────────────────────────────────────────────────────────
 
     @EventHandler
-    public void onSpindleChestClick(PlayerInteractEvent event) {
+    public void onThreadChestClick(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
         if (event.getClickedBlock() == null) return;
         if (event.getClickedBlock().getType() != Material.CHEST) return;
         Location chestLoc = event.getClickedBlock().getLocation();
-        if (!spindleMgr.isSpindleChest(chestLoc)) return;
+        if (!threadMgr.isThreadChest(chestLoc)) return;
 
         Player player = event.getPlayer();
         boolean isAdmin = player.hasPermission("limbus.admin") || player.isOp();
@@ -161,8 +161,8 @@ public class GachaListener implements Listener {
         // 其餘一律不可開箱，改為抽取
         event.setCancelled(true);
 
-        int cost = spindleMgr.getCost(chestLoc);
-        int have = countSpindle(player);
+        int cost = threadMgr.getCost(chestLoc);
+        int have = countThread(player);
         if (have < cost) {
             player.sendMessage(plugin.color("&#FF5555紡錘不足！需要 " + cost + " 個，你只有 " + have + " 個。"));
             return;
@@ -174,8 +174,8 @@ public class GachaListener implements Listener {
             return;
         }
 
-        removeSpindle(player, cost);
-        playSpindleEffect(chestLoc);
+        removeThread(player, cost);
+        playThreadEffect(chestLoc);
 
         // 給獎（背包滿則掉落腳邊）
         Map<Integer, ItemStack> overflow = player.getInventory().addItem(prize);
@@ -183,7 +183,7 @@ public class GachaListener implements Listener {
             player.getWorld().dropItemNaturally(player.getLocation(), left);
         }
 
-        String boxName = spindleMgr.getName(chestLoc);
+        String boxName = threadMgr.getName(chestLoc);
         String prizeName = (prize.hasItemMeta() && prize.getItemMeta().hasDisplayName())
                 ? prize.getItemMeta().getDisplayName()
                 : prize.getType().name();
@@ -215,7 +215,7 @@ public class GachaListener implements Listener {
         return null; // 理論上不會到這
     }
 
-    private void playSpindleEffect(Location loc) {
+    private void playThreadEffect(Location loc) {
         Location center = loc.clone().add(0.5, 1.0, 0.5);
         loc.getWorld().spawnParticle(Particle.END_ROD, center, 70, 0.4, 0.5, 0.4, 0.04);
         loc.getWorld().spawnParticle(Particle.GLOW, center, 30, 0.35, 0.45, 0.35, 0.02);

@@ -15,9 +15,9 @@ commands:
     description: 設定或移除抽取箱
     usage: /gachachest <set|remove>
     permission: limbus.admin
-  spindlechest:
+  threadchest:
     description: 設定或移除紡錘抽獎箱
-    usage: /spindlechest <set <cost> <name...>|remove>
+    usage: /threadchest <set <cost> <name...>|remove>
     permission: limbus.admin
   egogift:
     description: 飾品系統指令

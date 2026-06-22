@@ -30,8 +30,8 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
-    private static final String PACK_URL  = "https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack/releases/download/v2.4/Limbus_E.G.O_Gifts_plugin_ResourcePack.v2.4.zip";
-    private static final String PACK_HASH = "cbe1084e7b15033d0bb6507781823ff555f45111";
+    private static final String PACK_URL  = "https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack/releases/download/v2.5/Limbus_E.G.O_Gifts_plugin_ResourcePack.v2.5.zip";
+    private static final String PACK_HASH = "a54e7aeb8d4200b6ff6086150ff6d9fa64540114";
     private static final java.util.UUID PACK_UUID = java.util.UUID.nameUUIDFromBytes(
             PACK_URL.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
@@ -54,7 +54,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     private final Map<UUID, GiftAdminGUI> openAdminMenus = new HashMap<>();
 
     private GachaChestManager gachaChestManager;
-    private SpindleChestManager spindleChestManager;
+    private ThreadChestManager threadChestManager;
     private GachaListener gachaListener;
 
     // ── 階級表 ──────────────────────────────────────────────────────────────
@@ -218,8 +218,8 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
         // ── Gacha 系統 ──────────────────────────────────────────────────
         gachaChestManager = new GachaChestManager(this);
-        spindleChestManager = new SpindleChestManager(this);
-        gachaListener = new GachaListener(this, gachaChestManager, spindleChestManager);
+        threadChestManager = new ThreadChestManager(this);
+        gachaListener = new GachaListener(this, gachaChestManager, threadChestManager);
         getServer().getPluginManager().registerEvents(gachaListener, this);
 
         startPassiveTick();
@@ -239,10 +239,10 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
             gachachest.setExecutor(this::onGachaChest);
         }
 
-        PluginCommand spindlechest = getCommand("spindlechest");
-        if (spindlechest != null) {
-            spindlechest.setExecutor(this::onSpindleChest);
-            spindlechest.setTabCompleter(this);
+        PluginCommand threadchest = getCommand("threadchest");
+        if (threadchest != null) {
+            threadchest.setExecutor(this::onThreadChest);
+            threadchest.setTabCompleter(this);
         }
 
         PluginCommand egogift = getCommand("egogift");
@@ -255,7 +255,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
     @Override
     public void onDisable() {
         if (gachaChestManager != null) gachaChestManager.onDisable();
-        if (spindleChestManager != null) spindleChestManager.onDisable();
+        if (threadChestManager != null) threadChestManager.onDisable();
     }
 
     public void registerAccessory(Accessory acc) {
@@ -623,13 +623,13 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
                 target.getInventory().addItem(createMenuOpener());
                 return true;
             }
-            if (args[2].equalsIgnoreCase("spindle") || args[2].equalsIgnoreCase("lunacy")) {
+            if (args[2].equalsIgnoreCase("thread") || args[2].equalsIgnoreCase("lunacy")) {
                 int amount = 1;
                 if (args.length >= 4) {
                     try { amount = Math.min(64, Integer.parseInt(args[3])); } catch (NumberFormatException ignored) {}
                 }
-                ItemStack token = args[2].equalsIgnoreCase("spindle")
-                        ? gachaListener.createSpindle(amount)
+                ItemStack token = args[2].equalsIgnoreCase("thread")
+                        ? gachaListener.createThread(amount)
                         : gachaListener.createLunacy(amount);
                 target.getInventory().addItem(token);
                 return true;
@@ -657,13 +657,13 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
                 try { amount = Math.min(64, Integer.parseInt(args[1])); } catch (NumberFormatException ignored) {}
             }
             player.getInventory().addItem(gachaListener.createLunacy(amount));
-        } else if (id.equals("spindle")) {
+        } else if (id.equals("thread")) {
             if (!player.hasPermission("limbus.admin") && !player.isOp()) return true;
             int amount = 1;
             if (args.length >= 2) {
                 try { amount = Math.min(64, Integer.parseInt(args[1])); } catch (NumberFormatException ignored) {}
             }
-            player.getInventory().addItem(gachaListener.createSpindle(amount));
+            player.getInventory().addItem(gachaListener.createThread(amount));
         } else {
             Accessory acc = accessories.get(id);
             if (acc != null) acc.give(player);
@@ -685,7 +685,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
                     return true;
                 }
                 gachaChestManager.reload();
-                spindleChestManager.reload();
+                threadChestManager.reload();
                 sender.sendMessage(color("&#FFD700[LimbusEGOGift] &#AAAAAA插件資料已重新載入。"));
             }
             default -> { return false; }
@@ -727,7 +727,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         return true;
     }
 
-    private boolean onSpindleChest(CommandSender sender, Command cmd, String label, String[] args) {
+    private boolean onThreadChest(CommandSender sender, Command cmd, String label, String[] args) {
         if (!(sender instanceof Player player)) return true;
         if (!player.hasPermission("limbus.admin") && !player.isOp()) {
             player.sendMessage(color("&#FF5555你沒有權限使用此指令。"));
@@ -744,14 +744,14 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         switch (args[0].toLowerCase()) {
             case "set" -> {
                 if (args.length < 3) {
-                    player.sendMessage(color("&#FF5555用法：/spindlechest set <每抽紡錘數> <名稱...>"));
+                    player.sendMessage(color("&#FF5555用法：/threadchest set <每抽紡錘數> <名稱...>"));
                     return true;
                 }
                 int cost;
                 try {
                     cost = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    player.sendMessage(color("&#FF5555成本需為整數。用法：/spindlechest set <每抽紡錘數> <名稱...>"));
+                    player.sendMessage(color("&#FF5555成本需為整數。用法：/threadchest set <每抽紡錘數> <名稱...>"));
                     return true;
                 }
                 if (cost < 1) {
@@ -759,7 +759,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
                     return true;
                 }
                 String name = String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length));
-                if (spindleChestManager.register(target.getLocation(), name, cost)) {
+                if (threadChestManager.register(target.getLocation(), name, cost)) {
                     player.sendMessage(color("&#FFE5A0已設定此箱子為紡錘抽獎箱「" + name + "」，每抽消耗 " + cost + " 紡錘。"));
                     player.sendMessage(color("&#AAAAAA管理員潛行右鍵可開箱編輯獎池；一般玩家右鍵即抽取。"));
                 } else {
@@ -767,7 +767,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
                 }
             }
             case "remove" -> {
-                if (spindleChestManager.unregister(target.getLocation())) {
+                if (threadChestManager.unregister(target.getLocation())) {
                     player.sendMessage(color("&#FFE5A0已移除此箱子的紡錘抽獎箱狀態。"));
                 } else {
                     player.sendMessage(color("&#AAAAAA此箱子不是紡錘抽獎箱。"));
@@ -790,13 +790,13 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
                 .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
             return Collections.emptyList();
         }
-        if (command.getName().equals("spindlechest")) {
+        if (command.getName().equals("threadchest")) {
             if (args.length == 1) return List.of("set", "remove").stream()
                 .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
             return Collections.emptyList();
         }
         if (args.length == 1) {
-            List<String> ids = new ArrayList<>(List.of("admin", "menu", "lunacy", "spindle"));
+            List<String> ids = new ArrayList<>(List.of("admin", "menu", "lunacy", "thread"));
             ids.addAll(accessories.keySet());
             return ids.stream().filter(s -> s.startsWith(args[0].toLowerCase())).toList();
         }
