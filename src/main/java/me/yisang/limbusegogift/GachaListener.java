@@ -219,11 +219,8 @@ public class GachaListener implements Listener {
 
     private void playThreadEffect(Location loc) {
         Location center = loc.clone().add(0.5, 1.0, 0.5);
-        loc.getWorld().spawnParticle(Particle.END_ROD, center, 70, 0.4, 0.5, 0.4, 0.04);
-        loc.getWorld().spawnParticle(Particle.GLOW, center, 30, 0.35, 0.45, 0.35, 0.02);
-        loc.getWorld().spawnParticle(Particle.FLASH, center, 1);
-        loc.getWorld().playSound(center, Sound.BLOCK_BEACON_ACTIVATE, 0.7f, 1.6f);
-        loc.getWorld().playSound(center, Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.6f, 1.4f);
+        // 低調白光：少量 END_ROD，無音效
+        loc.getWorld().spawnParticle(Particle.END_ROD, center, 12, 0.25, 0.3, 0.25, 0.01);
     }
 
     // ── 抽取邏輯 ──────────────────────────────────────────────────────────────
