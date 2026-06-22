@@ -2,7 +2,7 @@
 
 將邊獄公司（Limbus Company）的 E.G.O 飾品帶進 Minecraft 的 Paper 插件。
 
-- **版本**：2.0
+- **版本**：2.1
 - **Minecraft 版本**：1.21.4
 - **平台**：Paper
 - **飾品數量**：80 件（+ 4 種殘影升級材料）
@@ -60,19 +60,35 @@
 
 ---
 
+## 紡錘抽獎箱系統（v2.1 新增）
+
+另一種**由管理員完全自訂內容**的抽獎箱，消耗代幣「紡錘」。與「飾品提取」固定飾品池不同，獎池由管理員自由放置。
+
+- **紡錘**（`thread`）：名稱與描述為 `#FFE5A0` 金色 ——「將所有可能性如絲線般紡織在一起的物品。」
+- **設定**：先把要當獎品的物品放入箱子，看向箱子執行 `/threadchest set <每抽紡錘數> <名稱...>`，箱子上方會顯示自訂名稱的懸浮文字。
+- **獎池** ＝ 箱內物品（**無限池**：抽出複本、箱內不減）；中獎機率**依物品疊總數加權**（放越多越容易中，可用數量控制稀有度）。
+- **開箱控制**：一般玩家右鍵 ＝ 消耗紡錘抽取（**無法開箱**）；**管理員潛行右鍵** ＝ 正常開箱以編輯獎池。
+- **抽中特效**：白光（`END_ROD` + 光輝 + 閃光 + 音效）。
+- **資料**：登記資訊存於 `thread_chests.yml`。
+
+---
+
 ## 指令
 
 | 指令 | 說明 | 權限 |
 |------|------|------|
 | `/accessories` | 開啟飾品欄位 GUI | 所有人 |
 | `/egogift category` | 開啟飾品圖鑑（依 Tier 分頁瀏覽，物品不可取出） | 所有人 |
-| `/egogift reload` | 重新載入插件資料（gacha_chests.yml） | `limbus.admin` / OP |
+| `/egogift reload` | 重新載入插件資料（gacha_chests.yml、thread_chests.yml） | `limbus.admin` / OP |
 | `/getgift <id>` | 取得指定飾品 | `limbus.admin` / OP |
 | `/getgift menu` | 取得飾品欄位開啟物品（下界之星，死亡不掉落） | `limbus.admin` / OP |
 | `/getgift admin` | 開啟管理員 GUI（翻頁瀏覽所有飾品） | `limbus.admin` / OP |
 | `/getgift lunacy [數量]` | 取得狂氣（最多 64） | `limbus.admin` / OP |
-| `/gachachest set` | 將所看之箱子設為抽取箱 | `limbus.admin` / OP |
-| `/gachachest remove` | 移除箱子的抽取箱狀態 | `limbus.admin` / OP |
+| `/getgift thread [數量]` | 取得紡錘（最多 64） | `limbus.admin` / OP |
+| `/gachachest set` | 將所看之箱子設為飾品提取箱 | `limbus.admin` / OP |
+| `/gachachest remove` | 移除箱子的飾品提取箱狀態 | `limbus.admin` / OP |
+| `/threadchest set <成本> <名稱...>` | 將所看之箱子設為紡錘抽獎箱 | `limbus.admin` / OP |
+| `/threadchest remove` | 移除箱子的紡錘抽獎箱狀態 | `limbus.admin` / OP |
 
 ---
 
@@ -102,7 +118,7 @@
 | `cqc_manual` | 近身格鬥手冊 | 被動：力量 I |
 | `crystallized_blood` | 血液結晶 | 受傷時獲得力量 I 3 秒 |
 | `dreaming_electric_sheep` | 夢中的電子羊 | 被動：緩降，緩慢 I |
-| `e_type_dimensional_dagger` | E行次元短劍 | 攻擊時 25% 機率傳送到目標身後並造成額外傷害 |
+| `e_type_dimensional_dagger` | E型次元短劍 | 攻擊時 25% 機率傳送到目標身後並造成額外傷害 |
 | `ebony_brooch` | 黑檀胸針 | 被動：夜視；夜晚獲得速度 I |
 | `frozen_cries` | 冰封的哀號 | 攻擊時施加緩慢 III 2 秒 |
 | `golden_urn` | 金甕 | 擊殺時額外掉落 1 金粒 |
@@ -184,7 +200,7 @@
 
 插件使用獨立資源包提供飾品外觀，玩家加入時會自動收到推送。  
 資源包來源：[Limbus_E.G.O_Gifts_plugin_ResourcePack](https://github.com/EvansGoethe/Limbus_E.G.O_Gifts_plugin_ResourcePack)  
-目前版本：**v.20**（`releases`）
+目前版本：**v2.5**
 
 ### CustomModelData 支援
 
@@ -197,5 +213,6 @@
 1. 將編譯好的 `.jar` 放入伺服器的 `plugins/` 資料夾
 2. 啟動伺服器，資源包會自動推送給玩家
 3. 輸入 `/getgift menu` 取得飾品欄位開啟物品（下界之星，**死亡不掉落**），右鍵即可開啟飾品 GUI
-4. 管理員使用 `/getgift lunacy <數量>` 發放狂氣，放置箱子後 `/gachachest set` 設定抽取箱
-5. 所有玩家可輸入 `/egogift category` 開啟飾品圖鑑瀏覽所有飾品
+4. 管理員使用 `/getgift lunacy <數量>` 發放狂氣，放置箱子後 `/gachachest set` 設定飾品提取箱
+5. 管理員使用 `/getgift thread <數量>` 發放紡錘，放好獎品的箱子後 `/threadchest set <成本> <名稱>` 設定紡錘抽獎箱
+6. 所有玩家可輸入 `/egogift category` 開啟飾品圖鑑瀏覽所有飾品
