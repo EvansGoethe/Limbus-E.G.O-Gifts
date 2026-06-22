@@ -97,12 +97,14 @@ public class GachaListener implements Listener {
         return item.getItemMeta().getPersistentDataContainer().has(LUNACY_KEY, PersistentDataType.BYTE);
     }
 
-    // ── 阻止狂氣種花 ──────────────────────────────────────────────────────────
+    // ── 阻止代幣放置（狂氣種花、紡錘放絆線）──────────────────────────────────────
 
     @EventHandler
-    public void onLunacyPlace(PlayerInteractEvent event) {
+    public void onCurrencyPlace(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        if (!isLunacy(event.getItem())) return;
+        ItemStack held = event.getItem();
+        if (!isLunacy(held) && !isThread(held)) return;
+        // 仍允許對箱子互動（開箱 / 紡錘抽獎箱）
         if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.CHEST) return;
         event.setCancelled(true);
     }
