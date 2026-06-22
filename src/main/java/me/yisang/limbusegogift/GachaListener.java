@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -97,16 +98,14 @@ public class GachaListener implements Listener {
         return item.getItemMeta().getPersistentDataContainer().has(LUNACY_KEY, PersistentDataType.BYTE);
     }
 
-    // ── 阻止代幣放置（狂氣種花、紡錘放絆線）──────────────────────────────────────
+    // ── 阻止代幣放置成方塊（狂氣→凋零玫瑰、紡錘→絆線）──────────────────────────
 
     @EventHandler
-    public void onCurrencyPlace(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        ItemStack held = event.getItem();
-        if (!isLunacy(held) && !isThread(held)) return;
-        // 仍允許對箱子互動（開箱 / 紡錘抽獎箱）
-        if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.CHEST) return;
-        event.setCancelled(true);
+    public void onCurrencyBlockPlace(BlockPlaceEvent event) {
+        ItemStack held = event.getItemInHand();
+        if (isLunacy(held) || isThread(held)) {
+            event.setCancelled(true);
+        }
     }
 
     // ── 右鍵箱子觸發 ─────────────────────────────────────────────────────────
