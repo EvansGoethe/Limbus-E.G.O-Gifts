@@ -1,5 +1,5 @@
 name: LimbusEGOGift
-version: 2.0
+version: 2.3.0
 main: me.yisang.limbusegogift.LimbusEGOGift
 description: Limbus Company E.G.O Gift accessory system
 api-version: "1.21.4"
@@ -16,8 +16,12 @@ commands:
     usage: /gachachest <set|remove>
     permission: limbus.admin
   threadchest:
-    description: 設定或移除紡錘抽獎箱
-    usage: /threadchest <set <cost> <name...>|remove>
+    description: 設定或移除自訂抽獎箱（支援紡錘/狂氣貨幣）
+    usage: /threadchest <set <消耗數> [thread|lunacy] <名稱...>|remove>
+    permission: limbus.admin
+  shopchest:
+    description: 設定或移除購買商店箱（付固定貨幣量取得箱內全部商品的複本）
+    usage: /shopchest <set <消耗數> [thread|lunacy] <顯示名稱...>|remove>
     permission: limbus.admin
   egogift:
     description: 飾品系統指令

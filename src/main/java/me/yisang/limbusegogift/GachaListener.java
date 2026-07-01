@@ -25,14 +25,17 @@ public class GachaListener implements Listener {
     private final LimbusEGOGift plugin;
     private final GachaChestManager chestMgr;
     private final ThreadChestManager threadMgr;
+    private final ShopChestManager shopMgr;
     private final NamespacedKey LUNACY_KEY;
     private final NamespacedKey THREAD_KEY;
     private final Random rng = new Random();
 
-    public GachaListener(LimbusEGOGift plugin, GachaChestManager chestMgr, ThreadChestManager threadMgr) {
+    public GachaListener(LimbusEGOGift plugin, GachaChestManager chestMgr,
+                         ThreadChestManager threadMgr, ShopChestManager shopMgr) {
         this.plugin = plugin;
         this.chestMgr = chestMgr;
         this.threadMgr = threadMgr;
+        this.shopMgr = shopMgr;
         this.LUNACY_KEY = new NamespacedKey(plugin, "lunacy");
         this.THREAD_KEY = new NamespacedKey(plugin, "thread");
     }
@@ -98,6 +101,31 @@ public class GachaListener implements Listener {
         return item.getItemMeta().getPersistentDataContainer().has(LUNACY_KEY, PersistentDataType.BYTE);
     }
 
+    private int countLunacy(Player player) {
+        int total = 0;
+        for (ItemStack i : player.getInventory().getContents()) {
+            if (isLunacy(i)) total += i.getAmount();
+        }
+        return total;
+    }
+
+    private void removeLunacy(Player player, int amount) {
+        int remaining = amount;
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length && remaining > 0; i++) {
+            ItemStack item = contents[i];
+            if (!isLunacy(item)) continue;
+            if (item.getAmount() <= remaining) {
+                remaining -= item.getAmount();
+                contents[i] = null;
+            } else {
+                item.setAmount(item.getAmount() - remaining);
+                remaining = 0;
+            }
+        }
+        player.getInventory().setContents(contents);
+    }
+
     // ── 阻止代幣放置成方塊（狂氣→凋零玫瑰、紡錘→絆線）──────────────────────────
 
     @EventHandler
@@ -143,7 +171,7 @@ public class GachaListener implements Listener {
         player.sendMessage(plugin.color("&#9928BB[飾品提取] &#AAAAAA獲得：" + tierColor + result.createItem().getItemMeta().getDisplayName()));
     }
 
-    // ── 紡錘抽獎箱 ────────────────────────────────────────────────────────────
+    // ── 自訂抽獎箱（支援紡錘 / 狂氣兩種貨幣）─────────────────────────────────
 
     @EventHandler
     public void onThreadChestClick(PlayerInteractEvent event) {
@@ -163,9 +191,13 @@ public class GachaListener implements Listener {
         event.setCancelled(true);
 
         int cost = threadMgr.getCost(chestLoc);
-        int have = countThread(player);
+        String currency = threadMgr.getCurrency(chestLoc);
+        boolean useLunacy = currency.equals("lunacy");
+
+        int have = useLunacy ? countLunacy(player) : countThread(player);
+        String currencyName = useLunacy ? "狂氣" : "紡錘";
         if (have < cost) {
-            player.sendMessage(plugin.color("&#FF5555紡錘不足！需要 " + cost + " 個，你只有 " + have + " 個。"));
+            player.sendMessage(plugin.color("&#FF5555" + currencyName + "不足！需要 " + cost + " 個，你只有 " + have + " 個。"));
             return;
         }
 
@@ -175,7 +207,11 @@ public class GachaListener implements Listener {
             return;
         }
 
-        removeThread(player, cost);
+        if (useLunacy) {
+            removeLunacy(player, cost);
+        } else {
+            removeThread(player, cost);
+        }
         playThreadEffect(chestLoc);
 
         // 給獎（背包滿則掉落腳邊）
@@ -188,7 +224,77 @@ public class GachaListener implements Listener {
         String prizeName = (prize.hasItemMeta() && prize.getItemMeta().hasDisplayName())
                 ? prize.getItemMeta().getDisplayName()
                 : prize.getType().name();
-        player.sendMessage(plugin.color("&#FFE5A0[" + boxName + "] &#AAAAAA獲得：&#FFFFFF" + prizeName));
+        String msgColor = useLunacy ? "&#FF0000" : "&#FFE5A0";
+        player.sendMessage(plugin.color(msgColor + "[" + boxName + "] &#AAAAAA獲得：&#FFFFFF" + prizeName));
+    }
+
+    // ── 購買商店箱（付固定貨幣量,拿走箱內全部商品的複本;箱內不減）─────────────
+
+    @EventHandler
+    public void onShopChestClick(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getClickedBlock() == null) return;
+        if (event.getClickedBlock().getType() != Material.CHEST) return;
+        Location chestLoc = event.getClickedBlock().getLocation();
+        if (!shopMgr.isShopChest(chestLoc)) return;
+
+        Player player = event.getPlayer();
+        boolean isAdmin = player.hasPermission("limbus.admin") || player.isOp();
+
+        // 管理員潛行右鍵:照常開箱以編輯商品內容
+        if (isAdmin && player.isSneaking()) return;
+
+        event.setCancelled(true);
+
+        int cost = shopMgr.getCost(chestLoc);
+        String currency = shopMgr.getCurrency(chestLoc);
+        boolean useLunacy = currency.equals("lunacy");
+        int have = useLunacy ? countLunacy(player) : countThread(player);
+        String currencyName = useLunacy ? "狂氣" : "紡錘";
+
+        if (have < cost) {
+            player.sendMessage(plugin.color("&#FF5555" + currencyName + "不足!需要 " + cost + " 個,你只有 " + have + " 個。"));
+            return;
+        }
+
+        // 取出所有商品的複本
+        List<ItemStack> goods = collectShopGoods(event.getClickedBlock());
+        if (goods.isEmpty()) {
+            player.sendMessage(plugin.color("&#FF5555此商店目前沒有商品。"));
+            return;
+        }
+
+        if (useLunacy) removeLunacy(player, cost);
+        else removeThread(player, cost);
+
+        playShopEffect(chestLoc);
+
+        for (ItemStack it : goods) {
+            Map<Integer, ItemStack> overflow = player.getInventory().addItem(it);
+            for (ItemStack left : overflow.values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), left);
+            }
+        }
+
+        String boxName = shopMgr.getName(chestLoc);
+        String msgColor = useLunacy ? "&#FF0000" : "&#FFE5A0";
+        player.sendMessage(plugin.color("&#9BE1FF[商店] " + msgColor + boxName + " &#AAAAAA已購入 &#FFFFFF" + goods.size() + " &#AAAAAA件商品(消耗 " + cost + " " + currencyName + ")"));
+    }
+
+    /** 取出箱內所有商品的複本,不改變原箱內容。 */
+    private List<ItemStack> collectShopGoods(org.bukkit.block.Block block) {
+        List<ItemStack> out = new ArrayList<>();
+        if (!(block.getState() instanceof org.bukkit.block.Container container)) return out;
+        for (ItemStack it : container.getInventory().getContents()) {
+            if (it != null && !it.getType().isAir()) out.add(it.clone());
+        }
+        return out;
+    }
+
+    private void playShopEffect(Location loc) {
+        Location center = loc.clone().add(0.5, 1.0, 0.5);
+        loc.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, center, 12, 0.3, 0.3, 0.3, 0.01);
+        loc.getWorld().playSound(center, Sound.ENTITY_VILLAGER_YES, 0.7f, 1.2f);
     }
 
     /** 從箱子 inventory 依疊總數加權抽一件，回傳數量 1 的複本（箱內不減）。 */
@@ -273,33 +379,6 @@ public class GachaListener implements Listener {
 
     private boolean playerHasEquipped(Player player, String id) {
         return plugin.getEquippedAccessories(player).stream().anyMatch(a -> a.getId().equals(id));
-    }
-
-    // ── 狂氣計算 ─────────────────────────────────────────────────────────────
-
-    private int countLunacy(Player player) {
-        int total = 0;
-        for (ItemStack i : player.getInventory().getContents()) {
-            if (isLunacy(i)) total += i.getAmount();
-        }
-        return total;
-    }
-
-    private void removeLunacy(Player player, int amount) {
-        int remaining = amount;
-        ItemStack[] contents = player.getInventory().getContents();
-        for (int i = 0; i < contents.length && remaining > 0; i++) {
-            ItemStack item = contents[i];
-            if (!isLunacy(item)) continue;
-            if (item.getAmount() <= remaining) {
-                remaining -= item.getAmount();
-                contents[i] = null;
-            } else {
-                item.setAmount(item.getAmount() - remaining);
-                remaining = 0;
-            }
-        }
-        player.getInventory().setContents(contents);
     }
 
     // ── 粒子效果 ─────────────────────────────────────────────────────────────

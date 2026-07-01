@@ -84,6 +84,7 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
     private GachaChestManager gachaChestManager;
     private ThreadChestManager threadChestManager;
+    private ShopChestManager shopChestManager;
     private GachaListener gachaListener;
 
     // ── 階級表 ──────────────────────────────────────────────────────────────
@@ -248,7 +249,8 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         // ── Gacha 系統 ──────────────────────────────────────────────────
         gachaChestManager = new GachaChestManager(this);
         threadChestManager = new ThreadChestManager(this);
-        gachaListener = new GachaListener(this, gachaChestManager, threadChestManager);
+        shopChestManager = new ShopChestManager(this);
+        gachaListener = new GachaListener(this, gachaChestManager, threadChestManager, shopChestManager);
         getServer().getPluginManager().registerEvents(gachaListener, this);
 
         startPassiveTick();
@@ -282,12 +284,19 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
             egogift.setExecutor(this::onEgoGift);
             egogift.setTabCompleter(this);
         }
+
+        PluginCommand shopchest = getCommand("shopchest");
+        if (shopchest != null) {
+            shopchest.setExecutor(this::onShopChest);
+            shopchest.setTabCompleter(this);
+        }
     }
 
     @Override
     public void onDisable() {
         if (gachaChestManager != null) gachaChestManager.onDisable();
         if (threadChestManager != null) threadChestManager.onDisable();
+        if (shopChestManager != null) shopChestManager.onDisable();
     }
 
     public void registerAccessory(Accessory acc) {
@@ -691,9 +700,18 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
                     sender.sendMessage(color("&#FF5555你沒有權限使用此指令。"));
                     return true;
                 }
-                gachaChestManager.reload();
-                threadChestManager.reload();
-                sender.sendMessage(color("&#FFD700[LimbusEGOGift] &#AAAAAA插件資料已重新載入。"));
+                sender.sendMessage(color("&#FFD700[LimbusEGOGift] &#AAAAAA完整重新載入中…"));
+                getServer().getScheduler().runTask(this, () -> {
+                    org.bukkit.plugin.PluginManager pm = getServer().getPluginManager();
+                    try {
+                        pm.disablePlugin(this);
+                        pm.enablePlugin(this);
+                        sender.sendMessage(color("&#FFD700[LimbusEGOGift] &#AAAAAA重新載入完成。"));
+                    } catch (Throwable t) {
+                        sender.sendMessage(color("&#FF5555[LimbusEGOGift] 重新載入失敗:" + t.getMessage()));
+                        getLogger().severe("完整重新載入失敗:" + t);
+                    }
+                });
             }
             default -> { return false; }
         }
@@ -750,34 +768,114 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
         switch (args[0].toLowerCase()) {
             case "set" -> {
+                // /threadchest set <cost> [thread|lunacy] <name...>
                 if (args.length < 3) {
-                    player.sendMessage(color("&#FF5555用法：/threadchest set <每抽紡錘數> <名稱...>"));
+                    player.sendMessage(color("&#FF5555用法：/threadchest set <消耗數> [thread|lunacy] <名稱...>"));
                     return true;
                 }
                 int cost;
                 try {
                     cost = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    player.sendMessage(color("&#FF5555成本需為整數。用法：/threadchest set <每抽紡錘數> <名稱...>"));
+                    player.sendMessage(color("&#FF5555成本需為整數。用法：/threadchest set <消耗數> [thread|lunacy] <名稱...>"));
                     return true;
                 }
                 if (cost < 1) {
-                    player.sendMessage(color("&#FF5555每抽紡錘數至少為 1。"));
+                    player.sendMessage(color("&#FF5555每抽消耗至少為 1。"));
                     return true;
                 }
-                String name = String.join(" ", java.util.Arrays.copyOfRange(args, 2, args.length));
-                if (threadChestManager.register(target.getLocation(), name, cost)) {
-                    player.sendMessage(color("&#FFE5A0已設定此箱子為紡錘抽獎箱「" + name + "」，每抽消耗 " + cost + " 紡錘。"));
+
+                // 判斷第三個參數是否為貨幣類型
+                String currency = "thread";
+                int nameStartIdx = 2;
+                if (args.length >= 4 && (args[2].equalsIgnoreCase("thread") || args[2].equalsIgnoreCase("lunacy"))) {
+                    currency = args[2].toLowerCase();
+                    nameStartIdx = 3;
+                }
+                if (nameStartIdx >= args.length) {
+                    player.sendMessage(color("&#FF5555請指定抽獎箱名稱。用法：/threadchest set <消耗數> [thread|lunacy] <名稱...>"));
+                    return true;
+                }
+
+                String name = String.join(" ", java.util.Arrays.copyOfRange(args, nameStartIdx, args.length));
+                String currencyDisplay = currency.equals("lunacy") ? "狂氣" : "紡錘";
+                if (threadChestManager.register(target.getLocation(), name, cost, currency)) {
+                    player.sendMessage(color("&#FFE5A0已設定此箱子為抽獎箱「" + name + "」，每抽消耗 " + cost + " " + currencyDisplay + "。"));
                     player.sendMessage(color("&#AAAAAA管理員潛行右鍵可開箱編輯獎池；一般玩家右鍵即抽取。"));
                 } else {
-                    player.sendMessage(color("&#AAAAAA此箱子已是紡錘抽獎箱。請先 remove 再重設。"));
+                    player.sendMessage(color("&#AAAAAA此箱子已是抽獎箱。請先 remove 再重設。"));
                 }
             }
             case "remove" -> {
                 if (threadChestManager.unregister(target.getLocation())) {
-                    player.sendMessage(color("&#FFE5A0已移除此箱子的紡錘抽獎箱狀態。"));
+                    player.sendMessage(color("&#FFE5A0已移除此箱子的抽獎箱狀態。"));
                 } else {
-                    player.sendMessage(color("&#AAAAAA此箱子不是紡錘抽獎箱。"));
+                    player.sendMessage(color("&#AAAAAA此箱子不是抽獎箱。"));
+                }
+            }
+            default -> { return false; }
+        }
+        return true;
+    }
+
+    private boolean onShopChest(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!(sender instanceof Player player)) return true;
+        if (!player.hasPermission("limbus.admin") && !player.isOp()) {
+            player.sendMessage(color("&#FF5555你沒有權限使用此指令。"));
+            return true;
+        }
+        if (args.length == 0) return false;
+
+        org.bukkit.block.Block target = player.getTargetBlockExact(10);
+        if (target == null || target.getType() != Material.CHEST) {
+            player.sendMessage(color("&#FF5555請看向一個箱子(10 格內)。"));
+            return true;
+        }
+
+        switch (args[0].toLowerCase()) {
+            case "set" -> {
+                // /shopchest set <cost> [thread|lunacy] <name...>
+                if (args.length < 3) {
+                    player.sendMessage(color("&#FF5555用法:/shopchest set <消耗數> [thread|lunacy] <顯示名稱...>"));
+                    return true;
+                }
+                int cost;
+                try {
+                    cost = Integer.parseInt(args[1]);
+                } catch (NumberFormatException e) {
+                    player.sendMessage(color("&#FF5555消耗數需為整數。用法:/shopchest set <消耗數> [thread|lunacy] <顯示名稱...>"));
+                    return true;
+                }
+                if (cost < 1) {
+                    player.sendMessage(color("&#FF5555每次消耗至少為 1。"));
+                    return true;
+                }
+
+                String currency = "thread";
+                int nameStartIdx = 2;
+                if (args.length >= 4 && (args[2].equalsIgnoreCase("thread") || args[2].equalsIgnoreCase("lunacy"))) {
+                    currency = args[2].toLowerCase();
+                    nameStartIdx = 3;
+                }
+                if (nameStartIdx >= args.length) {
+                    player.sendMessage(color("&#FF5555請指定商店顯示名稱。用法:/shopchest set <消耗數> [thread|lunacy] <顯示名稱...>"));
+                    return true;
+                }
+
+                String name = String.join(" ", java.util.Arrays.copyOfRange(args, nameStartIdx, args.length));
+                String currencyDisplay = currency.equals("lunacy") ? "狂氣" : "紡錘";
+                if (shopChestManager.register(target.getLocation(), name, cost, currency)) {
+                    player.sendMessage(color("&#9BE1FF已設定此箱子為商店「" + name + "」,每次消耗 " + cost + " " + currencyDisplay + "。"));
+                    player.sendMessage(color("&#AAAAAA管理員潛行右鍵可開箱編輯商品內容;玩家右鍵即付費購買箱內全部商品的複本。"));
+                } else {
+                    player.sendMessage(color("&#AAAAAA此箱子已是商店。請先 remove 再重設。"));
+                }
+            }
+            case "remove" -> {
+                if (shopChestManager.unregister(target.getLocation())) {
+                    player.sendMessage(color("&#9BE1FF已移除此箱子的商店狀態。"));
+                } else {
+                    player.sendMessage(color("&#AAAAAA此箱子不是商店。"));
                 }
             }
             default -> { return false; }
@@ -787,6 +885,15 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (command.getName().equals("shopchest")) {
+            if (args.length == 1) return List.of("set", "remove").stream()
+                .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
+            if (args.length == 3 && args[0].equalsIgnoreCase("set")) {
+                return List.of("thread", "lunacy").stream()
+                    .filter(s -> s.startsWith(args[2].toLowerCase())).toList();
+            }
+            return Collections.emptyList();
+        }
         if (command.getName().equals("egogift")) {
             if (args.length == 1) return List.of("category", "reload").stream()
                 .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
@@ -800,6 +907,11 @@ public class LimbusEGOGift extends JavaPlugin implements Listener, TabCompleter 
         if (command.getName().equals("threadchest")) {
             if (args.length == 1) return List.of("set", "remove").stream()
                 .filter(s -> s.startsWith(args[0].toLowerCase())).toList();
+            // /threadchest set <cost> [thread|lunacy] <name...>
+            if (args.length == 3 && args[0].equalsIgnoreCase("set")) {
+                return List.of("thread", "lunacy").stream()
+                    .filter(s -> s.startsWith(args[2].toLowerCase())).toList();
+            }
             return Collections.emptyList();
         }
         if (args.length == 1) {

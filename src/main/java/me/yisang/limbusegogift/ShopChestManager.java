@@ -15,23 +15,22 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * 自訂抽獎箱管理器。每個箱子可由管理員自訂「名稱」「每抽消耗量」和「貨幣類型」（紡錘／狂氣）。
- * 獎池即為箱子本身的 inventory（無限池：抽出複本，箱內不減；依疊總數加權）。
+ * 購買商店箱管理器。管理員自訂「顯示名稱」「消耗數量」「貨幣類型」（紡錘／狂氣）,
+ * 玩家右鍵時付出貨幣,即獲得箱內全部商品的複本(箱子內容不減)。
+ * 管理員潛行右鍵可正常開箱以編輯商品內容。
  */
-public class ThreadChestManager {
+public class ShopChestManager {
 
     private final LimbusEGOGift plugin;
     private final File dataFile;
     private YamlConfiguration config;
     private final Map<String, UUID> textDisplays = new HashMap<>();
 
-    public ThreadChestManager(LimbusEGOGift plugin) {
+    public ShopChestManager(LimbusEGOGift plugin) {
         this.plugin = plugin;
-        this.dataFile = new File(plugin.getDataFolder(), "thread_chests.yml");
+        this.dataFile = new File(plugin.getDataFolder(), "shop_chests.yml");
         load();
     }
-
-    // ── 持久化 ────────────────────────────────────────────────────────────────
 
     private void load() {
         if (!dataFile.exists()) {
@@ -45,11 +44,9 @@ public class ThreadChestManager {
 
     public void save() {
         try { config.save(dataFile); } catch (IOException e) {
-            plugin.getLogger().severe("無法儲存 thread_chests.yml: " + e.getMessage());
+            plugin.getLogger().severe("無法儲存 shop_chests.yml: " + e.getMessage());
         }
     }
-
-    // ── 登記 / 移除 ──────────────────────────────────────────────────────────
 
     public boolean register(Location loc, String name, int cost, String currency) {
         String key = locKey(loc);
@@ -75,19 +72,18 @@ public class ThreadChestManager {
         return true;
     }
 
-    public boolean isThreadChest(Location loc) {
+    public boolean isShopChest(Location loc) {
         return config.contains("chests." + locKey(loc));
     }
 
     public String getName(Location loc) {
-        return config.getString("chests." + locKey(loc) + ".name", "紡錘抽獎");
+        return config.getString("chests." + locKey(loc) + ".name", "商店");
     }
 
     public int getCost(Location loc) {
         return config.getInt("chests." + locKey(loc) + ".cost", 1);
     }
 
-    /** 取得箱子使用的貨幣類型："thread" 或 "lunacy"，預設 "thread"（向下相容）。 */
     public String getCurrency(Location loc) {
         return config.getString("chests." + locKey(loc) + ".currency", "thread");
     }
@@ -102,8 +98,6 @@ public class ThreadChestManager {
         return result;
     }
 
-    // ── TextDisplay 懸浮文字（顯示自訂名稱）─────────────────────────────────────
-
     private void spawnDisplay(Location loc) {
         String key = locKey(loc);
         removeDisplay(key);
@@ -111,8 +105,12 @@ public class ThreadChestManager {
         String name = getName(loc);
         String currency = getCurrency(loc);
         String currencyColor = currency.equals("lunacy") ? "&#FF0000" : "&#FFE5A0";
+        int cost = getCost(loc);
+        String currencyName = currency.equals("lunacy") ? "狂氣" : "紡錘";
         TextDisplay td = loc.getWorld().spawn(above, TextDisplay.class, e -> {
-            e.setText(plugin.color("&#FFFFFF[" + currencyColor + name + "&#FFFFFF]"));
+            e.setText(plugin.color(
+                    "&#FFFFFF[&#9BE1FF商店&#FFFFFF] " + currencyColor + name
+                    + "\n&#AAAAAA" + cost + " " + currencyName));
             e.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
             e.setTransformation(new Transformation(
                 new Vector3f(0, 0, 0),
@@ -135,8 +133,6 @@ public class ThreadChestManager {
     private void respawnAllDisplays() {
         for (Location loc : getAllLocations()) spawnDisplay(loc);
     }
-
-    // ── 工具 ─────────────────────────────────────────────────────────────────
 
     private String locKey(Location loc) {
         return loc.getWorld().getName() + "," + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
